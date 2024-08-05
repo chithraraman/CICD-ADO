@@ -1,0 +1,52 @@
+trigger:
+- main
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: TerraformTaskV4@4
+      displayName: TerraformInit
+      inputs:
+        provider: 'aws'
+        command: 'init'
+        backendServiceAWS: 'AWS-chithratrader-sydney'
+        backendAWSBucketName: 'ado-practice-bucket-2'
+        backendAWSKey: 'ado-terraform.tfstate'
+    - task: TerraformTaskV4@4
+      displayName: TerraformValidate
+      inputs:
+        provider: 'aws'
+        command: 'validate'
+    - task: TerraformTaskV4@4
+      displayName: TerraformFormat
+      inputs:
+        provider: 'aws'
+        command: 'custom'
+        outputTo: 'console'
+        customCommand: 'fmt'
+        environmentServiceNameAWS: 'AWS-chithratrader-sydney'
+    - task: TerraformTaskV4@4
+      displayName: TerraformPlan
+      inputs:
+        provider: 'aws'
+        command: 'plan'
+        commandOptions: '-out $(Build.SourcesDirectory)/tfplanfile'
+        environmentServiceNameAWS: 'AWS-chithratrader-sydney'
+    - task: ArchiveFiles@2
+      displayName: Archiving files
+      inputs:
+        rootFolderOrFile: '$(Build.BinariesDirectory)/'
+        includeRootFolder: true
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+    - task: PublishBuildArtifacts@1
+      displayName: Publish bild artifacts
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: '$(Build.BuildId)-build'
+        publishLocation: 'Container'
