@@ -4,7 +4,7 @@ resource "aws_instance" "web" {
   count = 1
 
   tags = {
-    Name = "HelloWorld12"
+    Name = "HelloWorld123"
   }
 }
 
